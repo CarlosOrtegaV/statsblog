@@ -81,7 +81,7 @@ Let's talk about the profit, for simplicity we can define it as following:
 `$$Profit_{weekly} = Price*Quantity - (MarginalCost*Quantity + FixedCost_{weekly})$$`
 Let's assume that marginal cost is known (5\$), zero fixed cost, and your family will set the default price (7.75\$) if there's a new shop. Using the Least Square, we can estimate the expected taco sales given the default price and we can plug it in the profit function. Considering the confidence interval of your estimated parameters, you can statistically argue that the new shop would make weekly between -764\$ or 6,754\$, even though the true expected profit remains at 2,526\$. Such variability in the expected profit may deter your family to open a new shop but can we do better than Least Squares? The answer is yes.
 
-## A Smarter Approach: Mixed Models
+# A Smarter Approach: Mixed Models
 
 Mixed Models, AKA random-effects or multilevel models, offer a smarter approach because it exploits information that Least Squares ignores: Dependence between observations. In the current example, we can think of every shop serving different consumers but of all them share common characteristics because they live in the same city. We can then argue that there's a latent demand of the city and each shop can just perceive a random realization of it. Then the statistical model of the demand at shop level, without income and other goods' prices component, is the following:
 
@@ -101,8 +101,6 @@ xyplot(demand ~ price | id, df,type = c('g','p','r'),
 
 We can use the Restricted Maximum Likelihood (REML) to estimate the multilevel demand model. This estimator helps to stabilise each shop level estimated demand given the prior of the general demand of the city. This property is key for giving more certainty in our recommendations to the family business. Figure \@ref(fig:conf) shows how much we improve by using a mixed model in terms of uncertainty, even though both Least Squares and REML include the true value (red line). In the case of REML, we can provide different types of confidence interval and bootstrap have good performance in small samples.
 
-Now we can say that the mean price elasticity should be between -0.23 and -0.63, when the true value is -0.53. More importantly, you can suggest that the expected profit given the default price is between 1,917\$ and 4,102\$ at 95\% of confidence interval. Now you don't have to scare everyone with negative expected profits as before. The recommendation is straightforward: your family should open the new shop.
-
 ```{r echo=FALSE, conf, fig.cap = "Confidence Intervals for the Price Effect"}
 # Forest plot
 linear_model = lm(demand ~ price, df)
@@ -119,7 +117,7 @@ ggplot(df_aux, aes(x=names, y=Interval, ymin=ylow, ymax=yhi))+
   xlab('')
 ```
 
+Now we can say that the mean price elasticity should be between -0.23 and -0.63, when the true value is -0.53. More importantly, you can suggest that the expected profit given the default price is between 1,917\$ and 4,102\$ at 95\% of confidence interval. Now you don't have to scare everyone with negative expected profits as before. The recommendation is straightforward: your family should open the new shop.
 
-
-## Bibliography
+# Bibliography
 + Andreyeva, T., Long, M. W., & Brownell, K. D. (2010). The Impact of Food Prices on Consumption: A Systematic Review of Research on the Price Elasticity of Demand for Food. American Journal of Public Health, 100(2), 216–222. http://doi.org/10.2105/AJPH.2008.151415
