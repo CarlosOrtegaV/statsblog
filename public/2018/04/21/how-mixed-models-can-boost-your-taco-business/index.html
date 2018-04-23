@@ -68,10 +68,9 @@
     <div class="article-content">
       <div id="TOC">
 <ul>
-<li><a href="#introduction-least-squares">Introduction &amp; Least Squares</a><ul>
+<li><a href="#introduction-least-squares">Introduction &amp; Least Squares</a></li>
 <li><a href="#a-smarter-approach-mixed-models">A Smarter Approach: Mixed Models</a></li>
 <li><a href="#bibliography">Bibliography</a></li>
-</ul></li>
 </ul>
 </div>
 
@@ -90,8 +89,9 @@ Figure 1: Estimated Demand
 </div>
 <p>Now notice how the data don’t seem to fit a precise negative relationship in Figure <a href="#fig:agg-demand">1</a> : lots of points lie outside of the confidence interval, even though the means per price levels (red dots) are inside the band. Maybe you can convince your family to trust your model but there’s a huge caveat: The model only represents the average demand of tacos at shop level across districts. What’s even more alarming is that our estimated mean price elasticity is quite unstable. At 95% of confidence interval, we can argue that the mean price elasticity is between -1.08 and 0.16. Microeconomics states the price elasticity must be non-positive, and food is often inelastic (Andreyeva, Long &amp; Brownell, 2010). In a nutshell, our recommendations for understanding the price elasticity for tacos, based on Least Squares, are at best non-informative.</p>
 <p>Let’s talk about the profit, for simplicity we can define it as following: <code>$$Profit_{weekly} = Price*Quantity - (MarginalCost*Quantity + FixedCost_{weekly})$$</code> Let’s assume that marginal cost is known (5$), zero fixed cost, and your family will set the default price (7.75$) if there’s a new shop. Using the Least Square, we can estimate the expected taco sales given the default price and we can plug it in the profit function. Considering the confidence interval of your estimated parameters, you can statistically argue that the new shop would make weekly between -764$ or 6,754$, even though the true expected profit remains at 2,526$. Such variability in the expected profit may deter your family to open a new shop but can we do better than Least Squares? The answer is yes.</p>
-<div id="a-smarter-approach-mixed-models" class="section level2">
-<h2>A Smarter Approach: Mixed Models</h2>
+</div>
+<div id="a-smarter-approach-mixed-models" class="section level1">
+<h1>A Smarter Approach: Mixed Models</h1>
 <p>Mixed Models, AKA random-effects or multilevel models, offer a smarter approach because it exploits information that Least Squares ignores: Dependence between observations. In the current example, we can think of every shop serving different consumers but of all them share common characteristics because they live in the same city. We can then argue that there’s a latent demand of the city and each shop can just perceive a random realization of it. Then the statistical model of the demand at shop level, without income and other goods’ prices component, is the following:</p>
 <p><code>$$Demand_{i} = \beta_0 + U_{i0} + \beta_1Price_{j} + U_{i1}Price_{j} + \epsilon_{ij} \\ Where \quad \epsilon_{ij} \sim \mathcal{N}(0,\sigma_{\epsilon}^2), \quad U_{i} \sim \mathcal{N}_{2}(0,G_0) $$</code></p>
 <p>The standard assumptions for mixed models is that the random effects <code>$U_{i}$</code> follow a bivariate normal distribution with mean zero, and covariance matrix <code>$G_0$</code>. Let’s assume that there’s independence between random effects and error term (<code>$\epsilon_{ij}$</code>), among all elements of random effects, and among error tems. We can argue these assumption hold because the experiment only lasted five weeks, not enough for significant changes in consumer income and other goods’ prices.</p>
@@ -103,20 +103,19 @@ Figure 2: Estimated Demand per Shop
 </p>
 </div>
 <p>We can use the Restricted Maximum Likelihood (REML) to estimate the multilevel demand model. This estimator helps to stabilise each shop level estimated demand given the prior of the general demand of the city. This property is key for giving more certainty in our recommendations to the family business. Figure <a href="#fig:conf">3</a> shows how much we improve by using a mixed model in terms of uncertainty, even though both Least Squares and REML include the true value (red line). In the case of REML, we can provide different types of confidence interval and bootstrap have good performance in small samples.</p>
-<p>Now we can say that the mean price elasticity should be between -0.23 and -0.63, when the true value is -0.53. More importantly, you can suggest that the expected profit given the default price is between 1,917$ and 4,102$ at 95% of confidence interval. Now you don’t have to scare everyone with negative expected profits as before. The recommendation is straightforward: your family should open the new shop.</p>
 <div class="figure"><span id="fig:conf"></span>
 <img src="/post/2018-04-21-how-mixed-models-can-boost-your-taco-business_files/figure-html/conf-1.png" alt="Confidence Intervals for the Price Effect" width="672" />
 <p class="caption">
 Figure 3: Confidence Intervals for the Price Effect
 </p>
 </div>
+<p>Now we can say that the mean price elasticity should be between -0.23 and -0.63, when the true value is -0.53. More importantly, you can suggest that the expected profit given the default price is between 1,917$ and 4,102$ at 95% of confidence interval. Now you don’t have to scare everyone with negative expected profits as before. The recommendation is straightforward: your family should open the new shop.</p>
 </div>
-<div id="bibliography" class="section level2">
-<h2>Bibliography</h2>
+<div id="bibliography" class="section level1">
+<h1>Bibliography</h1>
 <ul>
 <li>Andreyeva, T., Long, M. W., &amp; Brownell, K. D. (2010). The Impact of Food Prices on Consumption: A Systematic Review of Research on the Price Elasticity of Demand for Food. American Journal of Public Health, 100(2), 216–222. <a href="http://doi.org/10.2105/AJPH.2008.151415" class="uri">http://doi.org/10.2105/AJPH.2008.151415</a></li>
 </ul>
-</div>
 </div>
 
     </div>
