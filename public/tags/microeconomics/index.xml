@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Microeconomics on The Bayesian Bird</title>
+    <link>/tags/microeconomics/</link>
+    <description>Recent content in Microeconomics on The Bayesian Bird</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 21 Apr 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/microeconomics/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>How Mixed Models Can Boost your Taco Business</title>
+      <link>/2018/04/21/how-mixed-models-can-boost-your-taco-business/</link>
+      <pubDate>Sat, 21 Apr 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/04/21/how-mixed-models-can-boost-your-taco-business/</guid>
+      <description>Introduction &amp;amp; Least SquaresA Smarter Approach: Mixed ModelsBibliographyLittle note: the data presented below is simulated for the sake of the example
+Second little note: I assume you have intermediate knowledge of statistics/econometrics, basic microeconomics background helps to fully understand.
+Introduction &amp;amp; Least SquaresImagine that your family have been already in the taco business for a while and you just graduated from Economics or Stats programme.</description>
+    </item>
+    
+  </channel>
+</rss>

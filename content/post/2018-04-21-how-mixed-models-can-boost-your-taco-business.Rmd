@@ -1,0 +1,125 @@
+---
+title: How Mixed Models Can Boost your Taco Business
+author: Carlos Ortega Vázquez
+date: '2018-04-21'
+slug: how-mixed-models-can-boost-your-taco-business
+categories:
+  - R
+tags:
+  - Mixed Models
+  - Microeconomics
+  - Pedagogical Example
+output:
+  blogdown::html_page:
+    toc: true
+---
+
+*Little note: the data presented below is simulated for the sake of the example*
+
+*Second little note: I assume you have intermediate knowledge of statistics/econometrics, basic microeconomics background helps to fully understand.*
+
+# Introduction & Least Squares
+
+Imagine that your family have been already in the taco business for a while and you just graduated from Economics or Stats programme. Currently there are ten shops around different districts but the family business wants to open a new shop. Business expansion sounds great but they are unsure about the expected profits given the trouble of initial investment. Remember that small to medium family businesses often struggle to get bank loans at decent interest rates, so they often rely on other relatives. Thus the business question is the following: **What is the expected profits of opening a new shop in the same city?** So you get the idea of estimating the demand for tacos in your city so at least you make a smart guess of the expected profits.
+
+Microeconomics suggests you that the basic demand for tacos at shop level is given by the following expression:
+`$$Demand_{hundreds} = \beta_0 + \beta_1Price_{tacos} + \beta_2Price_{other} + \beta_3Income_{consumer}$$`
+An economist, or just a layman with common sense, would expect that increasing the price of tacos lowers demanded number of tacos while a higher consumer income implies higher tacos consumption. The effect of related goods is a bit trickier as it depends if the good is complementary (e.g. samourai sauce and belgian fries) or substitute (e.g. BMW and Mercedes Benz). 
+
+The ten shops have the policy of one single price which is 7.75 Mexican Pesos: This is the default price. But you talk to your family into changing prices at once during five weeks: in the first week all shops set the price at one particular level, then the next week to a higher price and so on. This plan allows us to assume that income and related goods' prices don't change during the five weeks. That is, those elements collapse into the intercept of the demand equation. At the end of this period you get enough data to make this plot with a Least Squares line: 
+
+```{r message=FALSE, include=FALSE}
+options(scipen = 2)
+library(snow)
+library(MASS)
+library(tidyverse)
+library(lme4)
+library(lattice)
+library(lme4)
+library(optimx)
+library(lmerTest)
+
+seed = 5030
+n = 10 # number of random effects - customers, stores..
+j = 5 # number of fixed effect - price changes
+beta0 = 15
+beta1 = -0.75
+rho = 0
+s1 = 0.3*beta0
+s2 = abs(0.2*beta1)
+price_seq = seq(5.5,10,by = (10-5.5)/(j-1))
+set.seed(seed); error = rnorm(j*n,0,1)
+
+df = data_frame(id = rep(c(1:n),j), price = sort(rep(price_seq,n)), 
+                error)
+df$id = factor(df$id, ordered = T)
+
+# Parameters for bivariate normal distribution
+mu = c(0,0)
+sigma = matrix(c(s1^2, s1*s2*rho, s1*s2*rho, s2^2),2) # Covariance matrix
+
+# Correlation Structure
+set.seed(seed); U = mvrnorm(n, mu = mu, Sigma = sigma)
+U = data_frame(intercept = U[,1], slope = U[,2])
+
+# Final df
+df = bind_cols(df, U1=rep(U$intercept,j), U2=rep(U$slope,j))
+df$demand = beta0 + beta1*df$price + df$U1 + df$U2*df$price + df$error
+
+```
+
+```{r echo=FALSE, agg-demand, fig.cap = "Estimated Demand"}
+ggplot(df, aes(x = price, y = demand)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  stat_summary(geom="point", fun.y=mean, color="red") +
+  labs(x = 'Price', y = 'Weekly Tacos in Hundreds')
+```
+Now notice how the data don't seem to fit a precise negative relationship in Figure \@ref(fig:agg-demand) : lots of points lie outside of the confidence interval, even though the means per price levels (red dots) are inside the band. Maybe you can convince your family to trust your model but there's a huge caveat: The model only represents the average demand of tacos at shop level across districts. What's even more alarming is that our estimated mean price elasticity is quite unstable. At 95% of confidence interval, we can argue that the mean price elasticity is between -1.08 and 0.16. Microeconomics states the price elasticity must be non-positive, and food is often inelastic (Andreyeva, Long & Brownell, 2010). In a nutshell, our recommendations for understanding the price elasticity for tacos, based on Least Squares, are at best non-informative.
+
+Let's talk about the profit, for simplicity we can define it as following:
+`$$Profit_{weekly} = Price*Quantity - (MarginalCost*Quantity + FixedCost_{weekly})$$`
+Let's assume that marginal cost is known (5\$), zero fixed cost, and your family will set the default price (7.75\$) if there's a new shop. Using the Least Square, we can estimate the expected taco sales given the default price and we can plug it in the profit function. Considering the confidence interval of your estimated parameters, you can statistically argue that the new shop would make weekly between -764\$ or 6,754\$, even though the true expected profit remains at 2,526\$. Such variability in the expected profit may deter your family to open a new shop but can we do better than Least Squares? The answer is yes.
+
+## A Smarter Approach: Mixed Models
+
+Mixed Models, AKA random-effects or multilevel models, offer a smarter approach because it exploits information that Least Squares ignores: Dependence between observations. In the current example, we can think of every shop serving different consumers but of all them share common characteristics because they live in the same city. We can then argue that there's a latent demand of the city and each shop can just perceive a random realization of it. Then the statistical model of the demand at shop level, without income and other goods' prices component, is the following:
+
+`$$Demand_{i} = \beta_0 + U_{i0} + \beta_1Price_{j} + U_{i1}Price_{j} + \epsilon_{ij}
+\\ Where \quad \epsilon_{ij} \sim \mathcal{N}(0,\sigma_{\epsilon}^2), \quad U_{i} \sim \mathcal{N}_{2}(0,G_0) $$`
+
+The standard assumptions for mixed models is that the random effects `$U_{i}$` follow a bivariate normal distribution with mean zero, and covariance matrix `$G_0$`. Let's assume that there's independence between random effects and error term (`$\epsilon_{ij}$`), among all elements of random effects, and among error tems. We can argue these assumption hold because the experiment only lasted five weeks, not enough for significant changes in consumer income and other goods' prices.
+
+We observe a clearer picture that each shop has its own demand in Figure \@ref(fig:demand). Interestingly, the shop 4 and 6 show a non-negative price effect which seems to break the Law of Demand. That's not true because the data is simulated and their price effect are actually negative. If we wouldn't know the true values, we should know be wary anyways because you can't take at face value what a Least Square on five observations says about the price effect: Economic theory should guide us on this one.
+
+```{r echo=FALSE, demand, fig.cap = "Estimated Demand per Shop"}
+xyplot(demand ~ price | id, df,type = c('g','p','r'),
+       index = function(x,y) coef(lm(y ~ x))[1],
+       xlab = 'Price',
+       ylab = 'Weekly Tacos in Hundreds')
+```
+
+We can use the Restricted Maximum Likelihood (REML) to estimate the multilevel demand model. This estimator helps to stabilise each shop level estimated demand given the prior of the general demand of the city. This property is key for giving more certainty in our recommendations to the family business. Figure \@ref(fig:conf) shows how much we improve by using a mixed model in terms of uncertainty, even though both Least Squares and REML include the true value (red line). In the case of REML, we can provide different types of confidence interval and bootstrap have good performance in small samples.
+
+Now we can say that the mean price elasticity should be between -0.23 and -0.63, when the true value is -0.53. More importantly, you can suggest that the expected profit given the default price is between 1,917\$ and 4,102\$ at 95\% of confidence interval. Now you don't have to scare everyone with negative expected profits as before. The recommendation is straightforward: your family should open the new shop.
+
+```{r echo=FALSE, conf, fig.cap = "Confidence Intervals for the Price Effect"}
+# Forest plot
+linear_model = lm(demand ~ price, df)
+df_aux = data_frame(names = c('Least Squares', 'REML Wald','REML Bootstrap'),
+                    Interval = c(linear_model$coefficients[2],linear_model$coefficients[2],
+                               linear_model$coefficients[2]),
+                    ylow = c(-1.520047, -0.9519452, -0.9339595),
+                    yhi = c(0.2256896,-0.3424123, -0.3611627))
+ggplot(df_aux, aes(x=names, y=Interval, ymin=ylow, ymax=yhi))+
+  geom_pointrange()+
+  geom_hline(yintercept = 0, linetype=2) +
+  geom_hline(yintercept=-0.75, color = "red") +
+  coord_flip()+
+  xlab('')
+```
+
+
+
+## Bibliography
++ Andreyeva, T., Long, M. W., & Brownell, K. D. (2010). The Impact of Food Prices on Consumption: A Systematic Review of Research on the Price Elasticity of Demand for Food. American Journal of Public Health, 100(2), 216–222. http://doi.org/10.2105/AJPH.2008.151415
